@@ -105,6 +105,23 @@ apt-get install git -y
 cd /opt
 git clone -b {{ devstack_branch }} https://github.com/openstack-dev/devstack.git
 
+# enabling SNAT and IP masquerade
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv4/conf/eth0/proxy_arp
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# creating the file for fetching inet address amd executing commands
+cat <<\EOF>/opt/devstack/dnsconf
+#!/bin/bash
+cd /opt/devstack/
+source /opt/devstack/openrc admin demo
+/usr/local/bin/neutron subnet-list | awk '{print $2}' > id.txt
+i1=`sed '4!d' id.txt`
+i2=`sed '5!d' id.txt`
+/usr/local/bin/neutron subnet-update $i1 --dns-nameservers list=true 8.8.8.8 8.8.4.4
+/usr/local/bin/neutron subnet-update $i2 --dns-nameservers list=true 8.8.8.8 8.8.4.4
+EOF
+
 # Create local.conf with necessary config options
 cat <<\EOF>/opt/devstack/local.conf
 [[local|localrc]]
@@ -147,6 +164,9 @@ ENABLED_SERVICES+=,horizon
 
 # Enable Logging
 LOGFILE=/opt/stack/logs/stack.sh.log
+VERBOSE=True
+LOG_COLOR=True
+SCREEN_LOGDIR=/opt/stack/logs
 
 EOF
 
@@ -168,6 +188,12 @@ chown -R stack:stack /opt/devstack
 
 # Create stack
 su stack -c /opt/devstack/stack.sh
+
+# Changing the permission of file
+chmod -R 755 /opt/devstack/dnsconf
+
+# execute the file for allowing DNS access from openstack instance
+/opt/devstack/dnsconf
 
 _eof
 
