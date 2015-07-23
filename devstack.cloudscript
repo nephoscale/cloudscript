@@ -8,7 +8,7 @@ globals
     devstack_instance_type  = 'CS4.4-SSD'   # 4GB RAM, 4 vCore, 100GB SSD, 10Gbps
     devstack_image_type     = 'Ubuntu Server 14.04 LTS'
     devstack_slice_user     = 'devstack'
-    devstack_branch         = 'stable/icehouse'
+    devstack_branch         = 'stable/juno'
     oneforall_password      = lib::random_password()
     server_password         = lib::random_password()
     console_password        = lib::random_password()
@@ -141,15 +141,16 @@ RABBIT_PASSWORD={{ devstack_oneforall_password_key.password }}
 SWIFT_HASH={{ devstack_oneforall_password_key.password }}
 
 # Branches
-KEYSTONE_BRANCH=stable/icehouse
-NOVA_BRANCH=stable/icehouse
-NEUTRON_BRANCH=stable/icehouse
-SWIFT_BRANCH=stable/icehouse
-GLANCE_BRANCH=stable/icehouse
-CINDER_BRANCH=stable/icehouse
-HEAT_BRANCH=stable/icehouse
-TROVE_BRANCH=stable/icehouse
-HORIZON_BRANCH=stable/icehouse
+# Modified the branch after the Openstack change
+KEYSTONE_BRANCH=stable/juno
+NOVA_BRANCH=stable/juno
+NEUTRON_BRANCH=stable/juno
+SWIFT_BRANCH=stable/juno
+GLANCE_BRANCH=stable/juno
+CINDER_BRANCH=stable/juno
+HEAT_BRANCH=stable/juno
+TROVE_BRANCH=stable/juno
+HORIZON_BRANCH=stable/juno
 
 # Services
 ENABLED_SERVICES=rabbit,mysql,key
