@@ -193,6 +193,9 @@ su stack -c /opt/devstack/stack.sh
 # Changing the permission of file
 chmod -R 755 /opt/devstack/dnsconf
 
+# Installing futures==2.2.0 (Fix for issue in distribution conflicts)
+sudo pip install futures==2.2.0
+
 # execute the file for allowing DNS access from openstack instance
 /opt/devstack/dnsconf
 
