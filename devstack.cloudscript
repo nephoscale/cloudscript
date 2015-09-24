@@ -8,7 +8,7 @@ globals
     devstack_instance_type  = 'CS4.4-SSD'   # 4GB RAM, 4 vCore, 100GB SSD, 10Gbps
     devstack_image_type     = 'Ubuntu Server 14.04 LTS'
     devstack_slice_user     = 'devstack'
-    devstack_branch         = 'stable/juno'
+    devstack_branch         = 'stable/kilo'
     oneforall_password      = lib::random_password()
     server_password         = lib::random_password()
     console_password        = lib::random_password()
@@ -103,7 +103,7 @@ apt-get install git -y
 
 # Clone devstack repo from stable branch
 cd /opt
-git clone -b {{ devstack_branch }} https://github.com/openstack-dev/devstack.git
+git clone -b stable/kilo https://github.com/openstack-dev/devstack.git
 
 # enabling SNAT and IP masquerade
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -111,7 +111,7 @@ echo 1 > /proc/sys/net/ipv4/conf/eth0/proxy_arp
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 # creating the file for fetching inet address amd executing commands
-cat <<\EOF>/opt/devstack/dnsconf
+cat << \EOF >/opt/devstack/dnsconf
 #!/bin/bash
 cd /opt/devstack/
 source /opt/devstack/openrc admin demo
@@ -123,7 +123,7 @@ i2=`sed '5!d' id.txt`
 EOF
 
 # Create local.conf with necessary config options
-cat <<\EOF>/opt/devstack/local.conf
+cat << \EOF >/opt/devstack/local.conf
 [[local|localrc]]
 #Network 
 #HOST_IP=
@@ -137,20 +137,20 @@ DATABASE_PASSWORD={{ devstack_oneforall_password_key.password }}
 ADMIN_PASSWORD={{ devstack_oneforall_password_key.password }}
 SERVICE_PASSWORD={{ devstack_oneforall_password_key.password }}
 SERVICE_TOKEN={{ devstack_oneforall_password_key.password }}
-RABBIT_PASSWORD={{ devstack_oneforall_password_key.password }}
+RABBIT_PASSWORD=guest
 SWIFT_HASH={{ devstack_oneforall_password_key.password }}
 
 # Branches
-# Modified the branch after the Openstack change
-KEYSTONE_BRANCH=stable/juno
-NOVA_BRANCH=stable/juno
-NEUTRON_BRANCH=stable/juno
-SWIFT_BRANCH=stable/juno
-GLANCE_BRANCH=stable/juno
-CINDER_BRANCH=stable/juno
-HEAT_BRANCH=stable/juno
-TROVE_BRANCH=stable/juno
-HORIZON_BRANCH=stable/juno
+# Modified the branch after the KILO version released
+KEYSTONE_BRANCH=stable/kilo
+NOVA_BRANCH=stable/kilo
+NEUTRON_BRANCH=stable/kilo
+SWIFT_BRANCH=stable/kilo
+GLANCE_BRANCH=stable/kilo
+CINDER_BRANCH=stable/kilo
+HEAT_BRANCH=stable/kilo
+TROVE_BRANCH=stable/kilo
+HORIZON_BRANCH=stable/kilo
 
 # Services
 ENABLED_SERVICES=rabbit,mysql,key
@@ -187,14 +187,14 @@ mv /opt/devstack/local.conf.tmp /opt/devstack/local.conf
 # Change privileges
 chown -R stack:stack /opt/devstack
 
+# change directory to execute stack.sh
+cd /opt/devstack
+
 # Create stack
 su stack -c /opt/devstack/stack.sh
 
 # Changing the permission of file
 chmod -R 755 /opt/devstack/dnsconf
-
-# Installing futures==2.2.0 (Fix for issue in distribution conflicts)
-sudo pip install futures==2.2.0
 
 # execute the file for allowing DNS access from openstack instance
 /opt/devstack/dnsconf
