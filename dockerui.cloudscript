@@ -7,7 +7,7 @@ globals
     docker_ui_hostname         = 'docker'
     docker_ui_instance_type    = 'CS1-SSD'    # 1GB RAM, 1 vCore, 25GB SSD, 10Gbps
     docker_ui_image_type       = 'Ubuntu Server 14.04 LTS'
-    docker_ui_slice_user       = 'docker'
+    default_slice_user       = 'docker'
     # passwords setup
     server_password         = lib::random_password()
     console_password        = lib::random_password()
@@ -43,27 +43,27 @@ task docker_ui_server_setup
     #------------------------------
 
     # Create storage slice keys
-    /key/token docker_ui_slice_key read_or_create
-        username            = docker_ui_slice_user
+    /key/token default_slice_key read_or_create
+        username            = default_slice_user
 
     # Create slice to store script in cloudstorage
-    /storage/slice docker_ui_slice read_or_create
-        keys                = [docker_ui_slice_key]
+    /storage/slice default_slice read_or_create
+        keys                = [default_slice_key]
 
     # Create slice container to store script in cloudstorage
-    /storage/container docker_ui_container => [docker_ui_slice] read_or_create
-        slice               = docker_ui_slice
+    /storage/container docker_ui_container => [default_slice] read_or_create
+        slice               = default_slice
 
     # Place script data in cloudstorage
-    /storage/object docker_ui_bootstrap_object => [docker_ui_slice, docker_ui_container] read_or_create
+    /storage/object docker_ui_bootstrap_object => [default_slice, docker_ui_container] read_or_create
         container_name      = 'docker_ui_container'
         file_name           = 'bootstrap_docker.sh'
-        slice               = docker_ui_slice
+        slice               = default_slice
         content_data        = docker_ui_bootstrap_data
 
     # Associate the cloudstorage object with the docker script
-    /orchestration/script docker_ui_bootstrap_script => [docker_ui_slice, docker_ui_container, docker_ui_bootstrap_object] read_or_create
-        data_uri            = 'cloudstorage://docker_ui_slice/docker_ui_container/bootstrap_docker.sh'
+    /orchestration/script docker_ui_bootstrap_script => [default_slice, docker_ui_container, docker_ui_bootstrap_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/docker_ui_container/bootstrap_docker.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
 

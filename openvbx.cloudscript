@@ -7,7 +7,7 @@ globals
     openvbx_hostname        = 'openvbx'
     openvbx_image_type      = 'Ubuntu Server 14.04 LTS'
     openvbx_instance_type   = 'CS1-SSD' # 1GB RAM, 1 vCore, 25GB SSD, 10Gbps
-    openvbx_slice_user      = 'openvbx'
+    default_slice_user      = 'openvbx'
     server_password         = lib::random_password()
     console_password        = lib::random_password()
     openvbx_db_password     = lib::random_password()
@@ -37,27 +37,27 @@ task config
     #-------------------------------
     
     # storage slice key
-    /key/token openvbx_slice_key read_or_create
-        username        = openvbx_slice_user
+    /key/token default_slice_key read_or_create
+        username        = default_slice_user
 
     # slice
-    /storage/slice openvbx_slice read_or_create
-        keys            = [openvbx_slice_key]
+    /storage/slice default_slice read_or_create
+        keys            = [default_slice_key]
     
     # slice container
-    /storage/container openvbx_container => [openvbx_slice] read_or_create
-        slice           = openvbx_slice
+    /storage/container openvbx_container => [default_slice] read_or_create
+        slice           = default_slice
     
     # store script as object in cloudstorage
-    /storage/object openvbx_install_script_object => [openvbx_slice, openvbx_container] read_or_create
+    /storage/object openvbx_install_script_object => [default_slice, openvbx_container] read_or_create
         container_name  = 'openvbx_container'
         file_name       = 'install_openvbx.sh'
-        slice           =  openvbx_slice
+        slice           =  default_slice
         content_data    =  install_openvbx_sh
         
     # associate the cloudstorage object with the openvbx script
-    /orchestration/script openvbx_install_script => [openvbx_slice, openvbx_container, openvbx_install_script_object] read_or_create
-        data_uri        = 'cloudstorage://openvbx_slice/openvbx_container/install_openvbx.sh'
+    /orchestration/script openvbx_install_script => [default_slice, openvbx_container, openvbx_install_script_object] read_or_create
+        data_uri        = 'cloudstorage://default_slice/openvbx_container/install_openvbx.sh'
         script_type     = _SHELL
         encoding        = _STORAGE
     

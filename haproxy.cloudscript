@@ -13,7 +13,7 @@ globals
     apache_instance_type    = 'CS1-SSD'     # 1GB RAM, 1 vCore, 25GB SSD, 10Gbps
     server_pass             = lib::random_password()
     console_pass            = lib::random_password()
-    haproxy_slice_user      = 'haproxy'
+    default_slice_user      = 'haproxy'
     
 thread haproxy_setup
     tasks                   = [haproxy_server_setup]
@@ -35,20 +35,20 @@ task haproxy_server_setup
         password            = console_pass
         
     # create storage slice keys
-    /key/token haproxy_slice_key read_or_create
-        username            = haproxy_slice_user
+    /key/token default_slice_key read_or_create
+        username            = default_slice_user
         
     #-------------------------------
     # create slice and container
     #-------------------------------
     
     # create slice to store script in cloudstorage
-    /storage/slice haproxy_slice read_or_create
-        keys                = [haproxy_slice_key]
+    /storage/slice default_slice read_or_create
+        keys                = [default_slice_key]
     
     # create slice container to store script in cloudstorage
-    /storage/container haproxy_container => [haproxy_slice] read_or_create
-        slice               = haproxy_slice
+    /storage/container haproxy_container => [default_slice] read_or_create
+        slice               = default_slice
 
     #-------------------------
     # create apache bootstrap 
@@ -56,15 +56,15 @@ task haproxy_server_setup
     #-------------------------
         
     # place script data in cloudstorage
-    /storage/object apache_bootstrap_object => [haproxy_slice, haproxy_container] read_or_create
+    /storage/object apache_bootstrap_object => [default_slice, haproxy_container] read_or_create
         container_name      = 'haproxy_container'
         file_name           = 'bootstrap_apache.sh'
-        slice               = haproxy_slice
+        slice               = default_slice
         content_data        = apache_bootstrap_data
         
     # associate the cloudstorage object with the haproxy script
-    /orchestration/script apache_bootstrap_script => [haproxy_slice, haproxy_container, apache_bootstrap_object] read_or_create
-        data_uri            = 'cloudstorage://haproxy_slice/haproxy_container/bootstrap_apache.sh'
+    /orchestration/script apache_bootstrap_script => [default_slice, haproxy_container, apache_bootstrap_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/haproxy_container/bootstrap_apache.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
     
@@ -96,15 +96,15 @@ task haproxy_server_setup
     #--------------------------
 
     # place script data in cloudstorage
-    /storage/object haproxy_bootstrap_object => [haproxy_slice, haproxy_container, apache1_server, apache2_server] read_or_create
+    /storage/object haproxy_bootstrap_object => [default_slice, haproxy_container, apache1_server, apache2_server] read_or_create
         container_name      = 'haproxy_container'
         file_name           = 'bootstrap_haproxy.sh'
-        slice               = haproxy_slice
+        slice               = default_slice
         content_data        = haproxy_bootstrap_data
         
     # associate the cloudstorage object with the haproxy script
-    /orchestration/script haproxy_bootstrap_script => [haproxy_slice, haproxy_container, haproxy_bootstrap_object] read_or_create
-        data_uri            = 'cloudstorage://haproxy_slice/haproxy_container/bootstrap_haproxy.sh'
+    /orchestration/script haproxy_bootstrap_script => [default_slice, haproxy_container, haproxy_bootstrap_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/haproxy_container/bootstrap_haproxy.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
 

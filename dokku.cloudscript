@@ -7,7 +7,7 @@ globals
     dokku_hostname          = 'dokku'
     dokku_instance_type     = 'CS1-SSD' # 1GB RAM, 1 vCore, 25GB SSD, 10Gbps 
     dokku_image_type        = 'Ubuntu Server 14.04 LTS'
-    dokku_slice_user        = 'dokku'
+    default_slice_user        = 'dokku'
     dokku_version           = '0.3.13'  # latest version of dokku: https://github.com/progrium/dokku 
     server_password         = lib::random_password()
     console_password        = lib::random_password()
@@ -37,27 +37,27 @@ task dokku_server_setup
     #-----------------------------
 
     # Create storage slice keys
-    /key/token dokku_slice_key read_or_create
-        username            = dokku_slice_user
+    /key/token default_slice_key read_or_create
+        username            = default_slice_user
 
     # Create slice to store script in cloudstorage
-    /storage/slice dokku_slice read_or_create
-        keys                = [dokku_slice_key]
+    /storage/slice default_slice read_or_create
+        keys                = [default_slice_key]
 
     # Create slice container to store script in cloudstorage
-    /storage/container dokku_container => [dokku_slice] read_or_create
-        slice               = dokku_slice
+    /storage/container dokku_container => [default_slice] read_or_create
+        slice               = default_slice
 
     # Place script data in cloudstorage
-    /storage/object dokku_bootstrap_object => [dokku_slice, dokku_container] read_or_create
+    /storage/object dokku_bootstrap_object => [default_slice, dokku_container] read_or_create
         container_name      = 'dokku_container'
         file_name           = 'bootstrap_dokku.sh'
-        slice               = dokku_slice
+        slice               = default_slice
         content_data        = dokku_bootstrap_data
 
     # Associate the cloudstorage object with the dokku script
-    /orchestration/script dokku_bootstrap_script => [dokku_slice, dokku_container, dokku_bootstrap_object] read_or_create
-        data_uri            = 'cloudstorage://dokku_slice/dokku_container/bootstrap_dokku.sh'
+    /orchestration/script dokku_bootstrap_script => [default_slice, dokku_container, dokku_bootstrap_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/dokku_container/bootstrap_dokku.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
 

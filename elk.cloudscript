@@ -7,7 +7,7 @@ globals
     elk_hostname            = 'elk'
     elk_instance_type       = 'CS2.2-SSD'    # 2GB RAM, 2 vCore(s), 50GB SSD, 10Gbps
     elk_image_type          = 'Ubuntu Server 14.04 LTS'
-    elk_slice_user          = 'elk'
+    default_slice_user          = 'elk'
     elasticsearch_version   = 'elasticsearch-1.4.2'
     logstash_version        = 'logstash-1.4.2'
     kibana_version          = 'kibana-3.1.2'
@@ -40,27 +40,27 @@ task elk_server_setup
     #-----------------------------
 
     # Create storage slice keys
-    /key/token elk_slice_key read_or_create
-        username            = elk_slice_user
+    /key/token default_slice_key read_or_create
+        username            = default_slice_user
 
     # Create slice to store script in cloudstorage
-    /storage/slice elk_slice read_or_create
-        keys                = [elk_slice_key]
+    /storage/slice default_slice read_or_create
+        keys                = [default_slice_key]
 
     # Create slice container to store script in cloudstorage
-    /storage/container elk_container => [elk_slice] read_or_create
-        slice               = elk_slice
+    /storage/container elk_container => [default_slice] read_or_create
+        slice               = default_slice
 
     # Place script data in cloudstorage
-    /storage/object elk_bootstrap_object => [elk_slice, elk_container] read_or_create
+    /storage/object elk_bootstrap_object => [default_slice, elk_container] read_or_create
         container_name      = 'elk_container'
         file_name           = 'bootstrap_elk.sh'
-        slice               = elk_slice
+        slice               = default_slice
         content_data        = elk_bootstrap_data
 
     # Associate the cloudstorage object with the elk script
-    /orchestration/script elk_bootstrap_script => [elk_slice, elk_container, elk_bootstrap_object] read_or_create
-        data_uri            = 'cloudstorage://elk_slice/elk_container/bootstrap_elk.sh'
+    /orchestration/script elk_bootstrap_script => [default_slice, elk_container, elk_bootstrap_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/elk_container/bootstrap_elk.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
 

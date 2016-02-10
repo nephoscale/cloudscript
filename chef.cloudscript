@@ -16,7 +16,7 @@ globals
     chef_version            = '12.0.3-1_amd64'
     server_pass             = lib::random_password()
     console_pass            = lib::random_password()
-    chef_slice_user         = 'chef'
+    default_slice_user         = 'chef'
     organization_short      = 'companyname'
     organization_full       = 'Company Name'
     admin_user              = 'admin'
@@ -49,20 +49,20 @@ task chef_client_server_setup
         password            = server_pass
 
     # create storage slice keys
-    /key/token chef_slice_key read_or_create
-        username            = chef_slice_user
+    /key/token default_slice_key read_or_create
+        username            = default_slice_user
         
     #-------------------------------
     # create slice and container
     #-------------------------------
     
     # create slice to store script in cloudstorage
-    /storage/slice chef_slice read_or_create
-        keys                = [chef_slice_key]
+    /storage/slice default_slice read_or_create
+        keys                = [default_slice_key]
     
     # create slice container to store script in cloudstorage
-    /storage/container chef_container => [chef_slice] read_or_create
-        slice               = chef_slice
+    /storage/container chef_container => [default_slice] read_or_create
+        slice               = default_slice
 
     #-------------------------------
     # create chef-server bootstrap 
@@ -70,15 +70,15 @@ task chef_client_server_setup
     #-------------------------------
 
     # place script data in cloudstorage
-    /storage/object server_bootstrap_object => [chef_slice, chef_container] read_or_create
+    /storage/object server_bootstrap_object => [default_slice, chef_container] read_or_create
         container_name      = 'chef_container'
         file_name           = 'bootstrap_server.sh'
-        slice               = chef_slice
+        slice               = default_slice
         content_data        = server_bootstrap_data
         
     # associate the cloudstorage object with the chef-server script
-    /orchestration/script server_bootstrap_script => [chef_slice, chef_container, server_bootstrap_object] read_or_create
-        data_uri            = 'cloudstorage://chef_slice/chef_container/bootstrap_server.sh'
+    /orchestration/script server_bootstrap_script => [default_slice, chef_container, server_bootstrap_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/chef_container/bootstrap_server.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
 
@@ -104,15 +104,15 @@ task chef_client_server_setup
     #-------------------------------
 
     # place script data in cloudstorage
-    /storage/object client_bootstrap_object => [chef_slice, chef_container, chef_server] read_or_create
+    /storage/object client_bootstrap_object => [default_slice, chef_container, chef_server] read_or_create
         container_name      = 'chef_container'
         file_name           = 'bootstrap_client.sh'
-        slice               = chef_slice
+        slice               = default_slice
         content_data        = client_bootstrap_data
         
     # associate the cloudstorage object with the chef-client script
-    /orchestration/script client_bootstrap_script => [chef_slice, chef_container, client_bootstrap_object] read_or_create
-        data_uri            = 'cloudstorage://chef_slice/chef_container/bootstrap_client.sh'
+    /orchestration/script client_bootstrap_script => [default_slice, chef_container, client_bootstrap_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/chef_container/bootstrap_client.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
 

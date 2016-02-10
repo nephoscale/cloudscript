@@ -7,7 +7,7 @@ globals
     devstack_hostname       = 'devstack'
     devstack_instance_type  = 'CS4.4-SSD'   # 4GB RAM, 4 vCore, 100GB SSD, 10Gbps
     devstack_image_type     = 'Ubuntu Server 14.04 LTS'
-    devstack_slice_user     = 'devstack'
+    default_slice_user     = 'devstack'
     devstack_branch         = 'stable/kilo'
     oneforall_password      = lib::random_password()
     server_password         = lib::random_password()
@@ -43,29 +43,29 @@ task devstack_server_setup
     #--------------------------------
 
     # Create storage slice keys
-    /key/token devstack_slice_key read_or_create
-        username            = devstack_slice_user
+    /key/token default_slice_key read_or_create
+        username            = default_slice_user
 
     # Create slice to store script in cloudstorage
 
-    /storage/slice devstack_slice read_or_create
-        keys                = [devstack_slice_key]
+    /storage/slice default_slice read_or_create
+        keys                = [default_slice_key]
 
     # Create slice container to store script in cloudstorage
-    /storage/container devstack_container => [devstack_slice] read_or_create
-        slice               = devstack_slice
+    /storage/container devstack_container => [default_slice] read_or_create
+        slice               = default_slice
 
     # Place script data in cloudstorage
 
-    /storage/object devstack_bootstrap_object => [devstack_slice, devstack_container] read_or_create
+    /storage/object devstack_bootstrap_object => [default_slice, devstack_container] read_or_create
         container_name      = 'devstack_container'
         file_name           = 'bootstrap_devstack.sh'
-        slice               = devstack_slice
+        slice               = default_slice
         content_data        = devstack_bootstrap_data
 
     # Associate the cloudstorage object with the devstack script
-    /orchestration/script devstack_bootstrap_script => [devstack_slice, devstack_container, devstack_bootstrap_object] read_or_create
-        data_uri            = 'cloudstorage://devstack_slice/devstack_container/bootstrap_devstack.sh'
+    /orchestration/script devstack_bootstrap_script => [default_slice, devstack_container, devstack_bootstrap_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/devstack_container/bootstrap_devstack.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
 

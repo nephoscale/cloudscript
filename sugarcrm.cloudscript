@@ -13,7 +13,7 @@ globals
     sugarcrm_db_password    = lib::random_password()
     sugarcrm_db_name        = 'sugarcrm'
     sugarcrm_db_username    = 'sugarcrm'
-    sugarcrm_slice_user     = 'sugarcrmsliceuser'
+    default_slice_user     = 'sugarcrmsliceuser'
 
 thread core
     tasks                   = [install]
@@ -38,27 +38,27 @@ task install
     #----------------------------
     
     # storage slice key
-    /key/token sugarcrm_slice_key read_or_create
-        username            = sugarcrm_slice_user
+    /key/token default_slice_key read_or_create
+        username            = default_slice_user
 
     # slice
-    /storage/slice sugarcrm_slice read_or_create
-        keys                = [sugarcrm_slice_key]
+    /storage/slice default_slice read_or_create
+        keys                = [default_slice_key]
 
     # slice container
-    /storage/container sugarcrm_container => [sugarcrm_slice] read_or_create
-        slice               = sugarcrm_slice
+    /storage/container sugarcrm_container => [default_slice] read_or_create
+        slice               = default_slice
 
     # store script as object in cloudstorage
-    /storage/object install_sugarcrm_script_object => [sugarcrm_slice, sugarcrm_container] read_or_create
+    /storage/object install_sugarcrm_script_object => [default_slice, sugarcrm_container] read_or_create
         container_name      = 'sugarcrm_container'
         file_name           = 'install_sugarcrm.sh'
-        slice               =  sugarcrm_slice
+        slice               =  default_slice
         content_data        =  install_sugarcrm_sh
 
     # associate the cloudstorage object with the sugarcrm script
-    /orchestration/script install_sugarcrm_script => [sugarcrm_slice, sugarcrm_container, install_sugarcrm_script_object] read_or_create
-        data_uri            = 'cloudstorage://sugarcrm_slice/sugarcrm_container/install_sugarcrm.sh'
+    /orchestration/script install_sugarcrm_script => [default_slice, sugarcrm_container, install_sugarcrm_script_object] read_or_create
+        data_uri            = 'cloudstorage://default_slice/sugarcrm_container/install_sugarcrm.sh'
         script_type         = _SHELL
         encoding            = _STORAGE
 

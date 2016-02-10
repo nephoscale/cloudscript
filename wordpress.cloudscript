@@ -11,7 +11,7 @@ globals
     console_password            = lib::random_password()
     mysql_root_password         = lib::random_password()
     wordpress_admin_password    = lib::random_password()
-    wordpress_slice_user        = 'wordpress'
+    default_slice_user        = 'wordpress'
     wordpress_db_username       = 'wordpress'
     wordpress_db_name           = 'wordpress'
     wordpress_db_password       = lib::random_password()
@@ -44,8 +44,8 @@ task wordpress_server_setup
         password                = console_password
         
     # create storage slice keys
-    /key/token wordpress_slice_key read_or_create
-        username                = wordpress_slice_user
+    /key/token default_slice_key read_or_create
+        username                = default_slice_user
         
     #----------------------------
     # create wordpress bootstrap 
@@ -53,23 +53,23 @@ task wordpress_server_setup
     #----------------------------
     
     # create slice to store script in cloudstorage
-    /storage/slice wordpress_slice read_or_create
-        keys                    = [wordpress_slice_key]
+    /storage/slice default_slice read_or_create
+        keys                    = [default_slice_key]
     
     # create slice container to store script in cloudstorage
-    /storage/container wordpress_container => [wordpress_slice] read_or_create
-        slice                   = wordpress_slice
+    /storage/container wordpress_container => [default_slice] read_or_create
+        slice                   = default_slice
     
     # place script data in cloudstorage
-    /storage/object wordpress_bootstrap_object => [wordpress_slice, wordpress_container] read_or_create
+    /storage/object wordpress_bootstrap_object => [default_slice, wordpress_container] read_or_create
         container_name          = 'wordpress_container'
         file_name               = 'bootstrap_wordpress.sh'
-        slice                   = wordpress_slice
+        slice                   = default_slice
         content_data            = wordpress_bootstrap_data
         
     # associate the cloudstorage object with the wordpress script
-    /orchestration/script wordpress_bootstrap_script => [wordpress_slice, wordpress_container, wordpress_bootstrap_object] read_or_create
-        data_uri                = 'cloudstorage://wordpress_slice/wordpress_container/bootstrap_wordpress.sh'
+    /orchestration/script wordpress_bootstrap_script => [default_slice, wordpress_container, wordpress_bootstrap_object] read_or_create
+        data_uri                = 'cloudstorage://default_slice/wordpress_container/bootstrap_wordpress.sh'
         script_type             = _SHELL
         encoding                = _STORAGE
     
